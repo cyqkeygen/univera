@@ -1,7 +1,8 @@
-import path from 'path';
-import webpack from 'webpack';
+import path from 'path'
+import webpack from 'webpack'
+import AssetsPlugin from 'assets-webpack-plugin'
 
-const isProduction = 'production' == process.env.NODE_ENV;
+const isProduction = 'production' == process.env.NODE_ENV
 
 const defaults = {
   context: process.cwd(),
@@ -10,8 +11,7 @@ const defaults = {
   entry: {
     client: [path.resolve('client/index.js')],
     vendor: [
-      'babel-polyfill', 'isomorphic-fetch', 'device.js',
-      'velocity-animate', 'velocity-animate/velocity.ui', 'jquery',
+      'babel-polyfill', 'device.js', 'isomorphic-fetch', 'scrollmagic',
       'react', 'react-dom', 'react-router', 'redux', 'react-redux',
     ],
   },
@@ -26,7 +26,6 @@ const defaults = {
     alias: {
       'fetch': 'isomorphic-fetch',
       'common': path.resolve('common'),
-      'velocity': path.resolve('node_modules/velocity-animate/velocity.js'),
       'ScrollMagic': path.resolve('node_modules/scrollmagic/scrollmagic/uncompressed/ScrollMagic.js'),
       'debug.addIndicators': path.resolve('node_modules/scrollmagic/scrollmagic/uncompressed/plugins/debug.addIndicators.js'),
       'ScrollMagic.velocity': path.resolve('node_modules/scrollmagic/scrollmagic/uncompressed/plugins/animation.velocity.js'),
@@ -50,19 +49,23 @@ const defaults = {
         'postcss',
       ],
     }, {
-      test: require.resolve('jquery'), loader: 'expose?$!expose?jQuery'
-    }, {
       test: require.resolve('scrollmagic'), loader: 'expose?ScrollMagic'
     }],
   },
   plugins: [
     new webpack.EnvironmentPlugin(['NODE_ENV']),
     new webpack.optimize.OccurrenceOrderPlugin(true),
-    new webpack.ProvidePlugin({
-      'Promise': 'bluebird',
-      'IScroll': 'iscroll/build/iscroll-probe'
+    new webpack.ProvidePlugin({'Promise': 'bluebird'}),
+    new webpack.optimize.CommonsChunkPlugin(
+      'vendor', isProduction ? 'vendor.js?[hash]' : 'vendor.js'
+    ),
+    new AssetsPlugin({
+      filename: 'manifest.json',
+      fullpath: true,
+      path: path.resolve('public/assets'),
+      prettyPrint: !isProduction,
+      update: true
     }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.js'),
   ],
   postcss(webpack) {
     return [
@@ -81,9 +84,9 @@ const defaults = {
       require('laggard')({opacity: false, pixrem: false, pseudo: false}),
       require('cssnano')({autoprefixer: false, safe: true}),
       require('postcss-browser-reporter'),
-    ];
+    ]
   },
-};
+}
 
 export default {
   ...defaults,
@@ -112,4 +115,4 @@ export default {
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoErrorsPlugin(),
   ],
-};
+}
